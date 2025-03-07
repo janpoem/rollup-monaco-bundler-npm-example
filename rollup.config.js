@@ -1,7 +1,13 @@
 import { RollupMonacoBundler } from 'rollup-monaco-bundler';
 
-const version = '0.50.0';
-// const version = '0.52.2';
+const inputVer = process.env.VER;
+
+const latestVer = '0.52.2';
+
+const version =
+  (inputVer != null && typeof inputVer === 'string' && inputVer.trim() !== '')
+    ? inputVer
+    : latestVer;
 
 const bundler = new RollupMonacoBundler({
   srcDir: `tmp/${version}`,

@@ -2,19 +2,21 @@
 
 项目基于 [rollup-monaco-bundler](https://github.com/janpoem/rollup-monaco-bundler) 
 
+调整使用 pnpm，npm 的 peer-deps 实在是麻烦。
+
 ```bash
-npm install --force
+pnpm install
 
 # 下载依赖包
 download-monaco -v 0.52.2
 # 或者使用
-npm run download
+pnpm run download
 
 # 构建 monaco-editor umd 包
-npm run build
+pnpm run build
 
 # 启动 webpack 验证
-npm run server
+pnpm run server
 ```
 
 然后浏览器访问 http://localhost:8080/ （0.52.2）

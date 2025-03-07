@@ -1,11 +1,14 @@
 {
   "name": "rollup-monaco-bundler-npm-example",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "scripts": {
     "build": "rollup -c rollup.config.js --bundleConfigAsCjs",
-    "download": "download-monaco -v 0.52.2",
-    "download-0.50": "download-monaco -v 0.50.0",
+    "build-0.50": "cross-env VER=0.50.0 rollup -c rollup.config.js --bundleConfigAsCjs",
+    "download": "download-monaco -v 0.52.2 -o",
+    "download-0.50": "download-monaco -v 0.50.0 -o",
+    "pack": "pnpm run download && pnpm run build",
+    "pack-0.50": "pnpm run download-0.50 && pnpm run build-0.50",
     "server": "webpack-dev-server"
   },
   "author": "",
@@ -13,11 +16,14 @@
   "dependencies": {
     "@zenstone/webpack-starter": "^1.0.7",
     "rollup": "^4.34.9",
-    "rollup-monaco-bundler": "^1.0.0",
+    "rollup-monaco-bundler": "^1.0.2",
     "rollup-plugin-styles": "^4.0.0",
     "rollup-plugin-swc3": "^0.12.1",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
