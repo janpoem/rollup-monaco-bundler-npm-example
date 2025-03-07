@@ -3,7 +3,7 @@
 项目基于 [rollup-monaco-bundler](https://github.com/janpoem/rollup-monaco-bundler) 
 
 ```bash
-npm install
+npm install --force
 
 # 下载依赖包
 download-monaco -v 0.52.2
