@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>monoco-editor</title>
+  <script src="zh-cn.js"></script>
+  <script>
+    MonacoEnvironment = {
+      locale      : 'zh-cn',
+      getWorkerUrl: function (moduleId, label) {
+        const version = '0.52.2'
+        if (label === 'json') {
+          return `./${version}/json.worker.umd.js`;
+        }
+        if (label === 'css' || label === 'scss' || label === 'less') {
+          return `./${version}/css.worker.umd.js`;
+        }
+        if (label === 'html' || label === 'handlebars' || label === 'razor') {
+          return `./${version}/html.worker.umd.js`;
+        }
+        if (label === 'typescript' || label === 'javascript') {
+          return `./${version}/ts.worker.umd.js`;
+        }
+        return `./${version}/editor.worker.umd.js`;
+      }
+    };
+  </script>
+  <script src="0.52.2/editor.main.umd.js"></script>
+  <script src="https://www.unpkg.com/prettier@3.2.5/standalone.js"></script>
+  <script src="https://www.unpkg.com/prettier@3.2.5/plugins/estree.js"></script>
+  <script src="https://www.unpkg.com/prettier@3.2.5/plugins/typescript.js"></script>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    .monaco-editor-container {
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+<div id="container" class="monaco-editor-container"></div>
+</body>
+<script>
+  const prettierOptions = {
+    parser                    : 'typescript',
+    plugins                   : prettierPlugins,
+    arrowParens               : 'avoid',
+    bracketSameLine           : false,
+    bracketSpacing            : true,
+    embeddedLanguageFormatting: 'auto',
+    htmlWhitespaceSensitivity : 'css',
+    insertPragma              : false,
+    jsxSingleQuote            : false,
+    printWidth                : 80,
+    proseWrap                 : 'preserve',
+    quoteProps                : 'as-needed',
+    requirePragma             : false,
+    semi                      : true,
+    singleAttributePerLine    : false,
+    singleQuote               : true,
+    tabWidth                  : 2,
+    trailingComma             : 'all',
+    useTabs                   : false
+  };
+
+  console.log('support language:\n\n' + monaco.languages.getLanguages().map(it => `${it.id}: ${it.extensions}`).join('\n'));
+
+  monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    // noSemanticValidation: true,
+    noSyntaxValidation: true // This line disables errors in jsx tags like <div>, etc.
+  });
+
+  monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+    jsx: monaco.languages.typescript.JsxEmit.React,
+    // jsxFactory          : 'React.createElement',
+    // reactNamespace      : 'React',
+    target              : monaco.languages.typescript.ScriptTarget.ESNext,
+    allowNonTsExtensions: true,
+    moduleResolution    : monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+    module              : monaco.languages.typescript.ModuleKind.ESNext,
+    esModuleInterop     : true,
+    noEmit              : true,
+    typeRoots           : ['node_modules/@types']
+  });
+
+  monaco.languages.registerDocumentFormattingEditProvider({ language: 'typescript', exclusive: true }, {
+    async provideDocumentFormattingEdits(model, options) {
+      console.log('DocumentFormattingEdit.format');
+      const formatted = await prettier.format(model.getValue(), prettierOptions);
+      return [
+        {
+          range: model.getFullModelRange(),
+          text : formatted
+        }
+      ];
+    }
+  });
+
+  monaco.languages.registerDocumentRangeFormattingEditProvider({ language: 'typescript', exclusive: true }, {
+    async provideDocumentRangeFormattingEdits(model, range, options) {
+      console.log('DocumentRangeFormattingEdit.format');
+      const formatted = await prettier.format(model.getValueInRange(range), prettierOptions);
+      return [
+        {
+          range: range,
+          text : formatted
+        }
+      ];
+    }
+  });
+
+  const editorInitValue = `import React from 'react';
+
+function Test() {
+  return <div>Hello World</div>;
+}
+
+export function What() {
+  React.useEffect(() => {
+    function handle() {
+      console.log('window resize')
+    }
+
+    window.addEventListener('resize', handle);
+
+    return () => {
+      window.removeEventListener('resize', handle);
+    }
+  }, []);
+
+  return <Test>okok</Test>;
+}`;
+
+  const saveKey = 'MonacoEditingValue';
+  let saveTimer = null;
+
+  function saveContent(value) {
+    if (saveTimer != null) {
+      clearTimeout(saveTimer);
+      saveTimer = null;
+    }
+    saveTimer = setTimeout(() => {
+      localStorage.setItem(saveKey, value);
+    }, 500);
+  }
+
+  async function mountEditor() {
+    let value = localStorage.getItem(saveKey);
+
+    if (value == null) {
+      value = editorInitValue;
+    }
+
+    const formatValue = await prettier.format(value, prettierOptions);
+
+    const model = monaco.editor.createModel(formatValue, 'typescript', monaco.Uri.parse('main.tsx'));
+
+    const editor = monaco.editor.create(document.getElementById('container'), {
+      // value,
+      model               : model,
+      language            : 'typescript',
+      automaticLayout     : true,
+      scrollBeyondLastLine: false,
+      autoIndent          : true,
+      formatOnPaste       : true,
+      formatOnType        : true
+    });
+
+    editor.getModel().onDidChangeContent((ev) => {
+      saveContent(editor.getValue());
+    });
+
+//     fetch('./types/react.d.ts').then(resp =>
+//       resp.text().then(
+//         text =>
+//           monaco.languages.typescript.typescriptDefaults.addExtraLib(`declare module 'react' {
+// ${text}
+// }`, 'react.d.ts')
+//       )
+//     );
+  }
+
+  mountEditor();
+</script>
+</html>
